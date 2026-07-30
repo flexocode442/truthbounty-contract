@@ -1,0 +1,92 @@
+name: One-time SC-022 merge repair
+
+on:
+  push:
+    branches:
+      - feature/sc-022-event-architecture
+
+permissions:
+  contents: write
+
+jobs:
+  repair:
+    if: ${{ !contains(github.event.head_commit.message, '[sc022-repair]') }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout branch
+        uses: actions/checkout@v4
+        with:
+          ref: feature/sc-022-event-architecture
+          fetch-depth: 0
+
+      - name: Apply deterministic repairs
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+
+          treasury = Path('contracts/treasury/TreasuryAccounting.sol')
+          text = treasury.read_text()
+
+          old_enum = '''        ECOSYSTEM_FUND,       // Future ecosystem development fund
+                  SLASHED_TREASURY      // Tokens slashed from verifiers
+              }'''
+          new_enum = '''        ECOSYSTEM_FUND,       // Future ecosystem development fund
+                  SLASHED_TREASURY,     // Tokens slashed from verifiers
+                  EXTERNAL              // Off-ledger source or destination marker
+              }'''
+
+          if 'TreasuryAccount(99)' in text:
+              if old_enum not in text:
+                  raise SystemExit('Could not locate TreasuryAccount enum for EXTERNAL marker')
+              text = text.replace(old_enum, new_enum, 1)
+              text = text.replace('TreasuryAccount(99)', 'TreasuryAccount.EXTERNAL')
+              treasury.write_text(text)
+          elif 'EXTERNAL' not in text:
+              raise SystemExit('Treasury external marker is neither patched nor patchable')
+
+          registry = Path('contracts/upgrade/VersionRegistry.sol')
+          text = registry.read_text()
+          old = 'function getVersion(string calldata contractName, string calldata semanticVersion)'
+          new = 'function getVersion(string memory contractName, string memory semanticVersion)'
+          if old in text:
+              registry.write_text(text.replace(old, new, 1))
+          elif new not in text:
+              raise SystemExit('Could not locate VersionRegistry.getVersion signature')
+          PY
+
+      - name: Commit and push repairs
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add contracts/treasury/TreasuryAccounting.sol contracts/upgrade/VersionRegistry.sol
+          if git diff --cached --quiet; then
+            echo "No source changes required"
+          else
+            git commit -m "fix: resolve remaining merge compile errors [sc022-repair]"
+            git push origin HEAD:feature/sc-022-event-architecture
+          fi
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Compile
+        id: compile
+        continue-on-error: true
+        shell: bash
+        run: |
+          set -o pipefail
+          npx hardhat compile --force 2>&1 | tee compile-output.txt
+
+      - name: Upload compiler output
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: sc022-compile-output
+          path: compile-output.txt
+          if-no-files-found: ignore
+
+      - name: Report compile failure
+        if: steps.compile.outcome == 'failure'
+        run: exit 1

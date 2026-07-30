@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.28;
 
+import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+
 /**
  * @title IInsuranceFund
  * @notice Interface for the Protocol Insurance Fund & Loss Recovery Framework
@@ -155,7 +157,7 @@ interface IInsuranceFund {
 
     // ============ View Functions ============
 
-    function reserveToken() external view returns (address);
+    function reserveToken() external view returns (IERC20);
 
     function getReserveBalance() external view returns (uint256);
 

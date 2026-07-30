@@ -114,7 +114,6 @@ contract InsuranceFund is
     error InsufficientReserves(uint256 requested, uint256 available);
     error InvalidFundingAmount();
     error ClaimNotApproved(uint256 claimId);
-    error ZeroAddress();
     error BatchSizeExceeded(uint256 provided, uint256 maxAllowed);
 
     // ============ Constructor ============
