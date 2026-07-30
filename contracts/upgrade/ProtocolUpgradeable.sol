@@ -27,7 +27,6 @@ abstract contract ProtocolUpgradeable is
     event ContractUpgraded(address indexed oldImpl, address indexed newImpl, string version);
 
     error UpgradeNotAuthorized();
-    error ZeroAddress();
 
     function _initializeProtocolUpgradeable(
         address _admin,
@@ -36,7 +35,6 @@ abstract contract ProtocolUpgradeable is
     ) internal {
         require(_admin != address(0), ZeroAddress());
 
-        __UUPSUpgradeable_init();
 
         if (_upgradeController != address(0)) {
             upgradeController = IUpgradeController(_upgradeController);
