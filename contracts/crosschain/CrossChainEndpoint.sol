@@ -21,7 +21,7 @@ contract CrossChainEndpoint is ICrossChainEndpoint, Ownable {
     // Relayer address that is authorized to process incoming messages (simplified for this architecture)
     mapping(address => bool) public authorizedRelayers;
 
-    constructor() Ownable() {}
+    constructor() Ownable(msg.sender) {}
 
     modifier onlySupportedChain(uint256 chainId) {
         require(supportedChains[chainId], "Unsupported chain");

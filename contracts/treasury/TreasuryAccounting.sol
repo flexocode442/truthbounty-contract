@@ -33,7 +33,8 @@ contract TreasuryAccounting is AccessControl, ReentrancyGuard, GovernanceOwnable
         PROTOCOL_FEES,        // Accumulated protocol fees
         GOVERNANCE_RESERVES,  // Governance-controlled reserve fund
         ECOSYSTEM_FUND,       // Future ecosystem development fund
-        SLASHED_TREASURY      // Tokens slashed from verifiers
+        SLASHED_TREASURY,     // Tokens slashed from verifiers
+        EXTERNAL              // Off-ledger source or destination marker
     }
 
     // ============ STRUCTS ============
@@ -192,7 +193,7 @@ contract TreasuryAccounting is AccessControl, ReentrancyGuard, GovernanceOwnable
             msg.sender,
             address(this),
             actualReceived,
-            TreasuryAccount(99), // External source marker
+            TreasuryAccount.EXTERNAL, // External source marker
             targetAccount,
             "external_deposit"
         );
@@ -294,7 +295,7 @@ contract TreasuryAccounting is AccessControl, ReentrancyGuard, GovernanceOwnable
             recipient,
             amount,
             sourceAccount,
-            TreasuryAccount(99), // External destination
+            TreasuryAccount.EXTERNAL, // External destination
             "external_withdrawal"
         );
 
@@ -320,7 +321,7 @@ contract TreasuryAccounting is AccessControl, ReentrancyGuard, GovernanceOwnable
             user,
             address(this),
             amount,
-            TreasuryAccount(99),
+            TreasuryAccount.EXTERNAL,
             TreasuryAccount.STAKING_RESERVE,
             "user_stake"
         );
@@ -348,7 +349,7 @@ contract TreasuryAccounting is AccessControl, ReentrancyGuard, GovernanceOwnable
             user,
             amount,
             TreasuryAccount.STAKING_RESERVE,
-            TreasuryAccount(99),
+            TreasuryAccount.EXTERNAL,
             "user_unstake"
         );
 
@@ -407,7 +408,7 @@ contract TreasuryAccounting is AccessControl, ReentrancyGuard, GovernanceOwnable
             recipient,
             amount,
             TreasuryAccount.REWARDS_POOL,
-            TreasuryAccount(99),
+            TreasuryAccount.EXTERNAL,
             "reward_distribution"
         );
 

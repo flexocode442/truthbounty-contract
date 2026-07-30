@@ -7,6 +7,7 @@ import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 import "@openzeppelin/contracts/utils/Pausable.sol";
 import "./governance/GovernanceOwnable.sol";
 import "./governance/GovernanceHooks.sol";
+import "./interfaces/ITruthBountyEvents.sol";
 import "./treasury/ITreasuryAccounting.sol";
 import "./IReputationOracle.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
@@ -25,7 +26,7 @@ interface IStaking {
     function stakingToken() external view returns (address);
 }
 
-contract VerifierSlashing is ResolverRoleTimelock, ReentrancyGuard, Pausable, GovernanceOwnable {
+contract VerifierSlashing is ResolverRoleTimelock, ReentrancyGuard, Pausable, GovernanceOwnable, ITruthBountyEvents {
     
     // Role definitions
     bytes32 public constant ADMIN_ROLE = keccak256("ADMIN_ROLE");
@@ -41,6 +42,7 @@ contract VerifierSlashing is ResolverRoleTimelock, ReentrancyGuard, Pausable, Go
 
     // Maximum number of verifiers that can be slashed in a single batch.
     uint256 public constant MAX_BATCH_SIZE = 50;
+    uint16 public constant EVENT_SCHEMA_VERSION = 1;
     
     // Default maximum slashing percentage per incident
     uint256 public maxSlashPercentage = 50; // 50% max per slash
@@ -432,7 +434,11 @@ contract VerifierSlashing is ResolverRoleTimelock, ReentrancyGuard, Pausable, Go
             amount: slashAmount,
             percentage: config.slashPercentage,
             reason: reason,
-            slashedBy: msg.sender
+            slashedBy: msg.sender,
+            claimId: 0,
+            settlementEpoch: block.timestamp / settlementEpochDuration,
+            offenceId: offenceId,
+            reasonHash: keccak256(bytes(reason))
         }));
 
         if (slashAmount > 0) {
@@ -473,7 +479,7 @@ contract VerifierSlashing is ResolverRoleTimelock, ReentrancyGuard, Pausable, Go
         }
         
         if (block.timestamp < lastSlashTime[verifier] + slashCooldown) {
-            revert o(); // Custom revert or standard cooldown block
+            revert SlashingTooFrequent();
         }
 
         if (lastSlashBlock[verifier] == block.number) {
@@ -520,6 +526,14 @@ contract VerifierSlashing is ResolverRoleTimelock, ReentrancyGuard, Pausable, Go
             remainingStake,
             reason,
             msg.sender
+        );
+        emit SlashExecutedV1(
+            0,
+            verifier,
+            keccak256(bytes(reason)),
+            slashAmount,
+            uint64(block.timestamp),
+            EVENT_SCHEMA_VERSION
         );
 
         emit StakeSlashed(verifier, slashAmount, bytes32(0));
@@ -704,7 +718,20 @@ contract VerifierSlashing is ResolverRoleTimelock, ReentrancyGuard, Pausable, Go
         _routeSlashedTokens(slashAmount);
 
         emit CriticalSlashed(verifier, slashAmount, percentage, reason, msg.sender);
-        emit StakeSlashed(verifier, slashAmount, keccak256("CRITICAL_OFFENCE"));
+        emit SlashExecutedV1(
+            0,
+            verifier,
+            keccak256(bytes(reason)),
+            slashAmount,
+            uint64(block.timestamp),
+            EVENT_SCHEMA_VERSION
+        );
+
+        emit StakeSlashed(
+            verifier,
+            slashAmount,
+            keccak256("CRITICAL_OFFENCE")
+        );
     }
     
     /**
@@ -728,7 +755,7 @@ contract VerifierSlashing is ResolverRoleTimelock, ReentrancyGuard, Pausable, Go
         }
         
         if (block.timestamp < lastSlashTime[verifier] + slashCooldown) {
-            revert o();
+            revert SlashingTooFrequent();
         }
 
         if (lastSlashBlock[verifier] == block.number) {
@@ -776,6 +803,15 @@ contract VerifierSlashing is ResolverRoleTimelock, ReentrancyGuard, Pausable, Go
             reason,
             msg.sender
         );
+        emit SlashExecutedV1(
+            0,
+            verifier,
+            keccak256(bytes(reason)),
+            slashAmount,
+            uint64(block.timestamp),
+            EVENT_SCHEMA_VERSION
+        );
+
         emit StakeSlashed(verifier, slashAmount, bytes32(0));
     }
 
@@ -784,12 +820,12 @@ contract VerifierSlashing is ResolverRoleTimelock, ReentrancyGuard, Pausable, Go
      */
     function _routeSlashedTokens(uint256 amount) internal {
         if (amount == 0) return;
-        
+
         address tokenAddress = stakingContract.stakingToken();
         if (tokenAddress == address(0)) return;
 
         IERC20 token = IERC20(tokenAddress);
-        
+
         uint256 toTreasury = (amount * pctTreasuryReserve) / 100;
         uint256 toSecurity = (amount * pctSecurityFund) / 100;
         uint256 toInsurance = (amount * pctProtocolInsurance) / 100;
@@ -1072,9 +1108,29 @@ contract VerifierSlashing is ResolverRoleTimelock, ReentrancyGuard, Pausable, Go
     
     function pause() external onlyRole(PAUSER_ROLE) {
         _pause();
+        emit EmergencyPauseActivatedV1(
+
+            msg.sender,
+
+            keccak256("MANUAL_PAUSE"),
+
+            uint64(block.timestamp),
+
+            EVENT_SCHEMA_VERSION
+
+        );
     }
     
     function unpause() external onlyRole(PAUSER_ROLE) {
         _unpause();
+        emit EmergencyPauseRecoveredV1(
+
+            msg.sender,
+
+            uint64(block.timestamp),
+
+            EVENT_SCHEMA_VERSION
+
+        );
     }
 }
