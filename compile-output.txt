@@ -1,0 +1,118 @@
+Warning: This declaration has the same name as another declaration.
+   --> contracts/TruthBountyWeighted.sol:548:9:
+    |
+548 |         Vote storage vote = votes[claimId][msg.sender];
+    |         ^^^^^^^^^^^^^^^^^
+Note: The other declaration is here:
+   --> contracts/TruthBountyWeighted.sol:379:5:
+    |
+379 |     function vote(
+    |     ^ (Relevant source part starts here and spans across multiple lines).
+
+
+Warning: This declaration has the same name as another declaration.
+   --> contracts/TruthBountyWeighted.sol:631:9:
+    |
+631 |         Vote storage vote = votes[claimId][msg.sender];
+    |         ^^^^^^^^^^^^^^^^^
+Note: The other declaration is here:
+   --> contracts/TruthBountyWeighted.sol:379:5:
+    |
+379 |     function vote(
+    |     ^ (Relevant source part starts here and spans across multiple lines).
+
+
+Warning: This declaration has the same name as another declaration.
+   --> contracts/TruthBountyWeighted.sol:702:9:
+    |
+702 |         VerifierStake storage stake = verifierStakes[msg.sender];
+    |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Note: The other declaration is here:
+   --> contracts/TruthBountyWeighted.sol:354:5:
+    |
+354 |     function stake(uint256 amount) external nonReentrant whenNotPaused {
+    |     ^ (Relevant source part starts here and spans across multiple lines).
+
+
+Warning: This declaration has the same name as another declaration.
+   --> contracts/TruthBountyWeighted.sol:975:13:
+    |
+975 |             Vote storage vote = votes[claimId][voters[i]];
+    |             ^^^^^^^^^^^^^^^^^
+Note: The other declaration is here:
+   --> contracts/TruthBountyWeighted.sol:379:5:
+    |
+379 |     function vote(
+    |     ^ (Relevant source part starts here and spans across multiple lines).
+
+
+Warning: This declaration has the same name as another declaration.
+    --> contracts/TruthBountyWeighted.sol:1006:13:
+     |
+1006 |             Vote storage vote = votes[claimId][voter];
+     |             ^^^^^^^^^^^^^^^^^
+Note: The other declaration is here:
+   --> contracts/TruthBountyWeighted.sol:379:5:
+    |
+379 |     function vote(
+    |     ^ (Relevant source part starts here and spans across multiple lines).
+
+
+Warning: This declaration shadows an existing declaration.
+    --> contracts/TruthBountyWeighted.sol:1001:25:
+     |
+1001 |     ) internal returns (uint256 totalSlashed) {
+     |                         ^^^^^^^^^^^^^^^^^^^^
+Note: The shadowed declaration is here:
+   --> contracts/TruthBountyWeighted.sol:211:5:
+    |
+211 |     uint256 public totalSlashed;
+    |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+
+TypeError: Function has override specified but does not override anything.
+   --> contracts/TruthBounty.sol:281:44:
+    |
+281 |     function _resolverRole() internal pure override returns (bytes32) {
+    |                                            ^^^^^^^^
+
+
+TypeError: Invalid contract specified in override list: "ResolverRoleTimelock".
+   --> contracts/TruthBounty.sol:289:62:
+    |
+289 |     function grantRole(bytes32 role, address account) public override(AccessControl, ResolverRoleTimelock) {
+    |                                                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Note: This contract: 
+  --> contracts/utils/ResolverRoleTimelock.sol:12:1:
+   |
+12 | abstract contract ResolverRoleTimelock is AccessControl {
+   | ^ (Relevant source part starts here and spans across multiple lines).
+
+
+TypeError: Cannot call function via contract type name.
+   --> contracts/TruthBounty.sol:290:9:
+    |
+290 |         ResolverRoleTimelock.grantRole(role, account);
+    |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+
+TypeError: Member "minStakeAmount" not found or not visible after argument-dependent lookup in struct IEconomicSimulation.SimulationConfig memory.
+   --> contracts/simulation/EconomicSimulation.sol:253:44:
+    |
+253 |         uint256 totalStakedEnd = stakers * config.minStakeAmount;
+    |                                            ^^^^^^^^^^^^^^^^^^^^^
+
+
+Error HH600: Compilation failed
+
+HardhatError: HH600: Compilation failed
+    at SimpleTaskDefinition.action (/workspaces/truthbounty-contract/node_modules/hardhat/src/builtin-tasks/compile.ts:504:15)
+    at processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async Environment._runTaskDefinition (/workspaces/truthbounty-contract/node_modules/hardhat/src/internal/core/runtime-environment.ts:351:14)
+    at async OverriddenTaskDefinition._action (/workspaces/truthbounty-contract/node_modules/@typechain/hardhat/src/index.ts:28:30)
+    at async Environment._runTaskDefinition (/workspaces/truthbounty-contract/node_modules/hardhat/src/internal/core/runtime-environment.ts:351:14)
+    at async Environment.run (/workspaces/truthbounty-contract/node_modules/hardhat/src/internal/core/runtime-environment.ts:184:14)
+    at async SimpleTaskDefinition.action (/workspaces/truthbounty-contract/node_modules/hardhat/src/builtin-tasks/compile.ts:1433:63)
+    at async Environment._runTaskDefinition (/workspaces/truthbounty-contract/node_modules/hardhat/src/internal/core/runtime-environment.ts:351:14)
+    at async Environment._runTaskDefinition (/workspaces/truthbounty-contract/node_modules/hardhat/src/internal/core/runtime-environment.ts:351:14)
+    at async Environment.run (/workspaces/truthbounty-contract/node_modules/hardhat/src/internal/core/runtime-environment.ts:184:14)

@@ -8,11 +8,11 @@ import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "../governance/GovernanceOwnable.sol";
 import "../governance/GovernanceHooks.sol";
+import "../interfaces/ITruthBountyEvents.sol";
 import "../IReputationOracle.sol";
 import "../treasury/ITreasuryAccounting.sol";
-import "../IReputationOracle.sol";
 
-contract RewardEngine is ReentrancyGuard, Pausable, GovernanceOwnable {
+contract RewardEngine is ReentrancyGuard, Pausable, GovernanceOwnable, ITruthBountyEvents {
     using SafeERC20 for IERC20;
     // ============ Roles ============
 
@@ -23,6 +23,7 @@ contract RewardEngine is ReentrancyGuard, Pausable, GovernanceOwnable {
     // ============ Constants ============
 
     uint256 public constant BASE_MULTIPLIER = 1e18;
+    uint16 public constant EVENT_SCHEMA_VERSION = 1;
     uint256 public constant PERCENT_DENOMINATOR = 100;
     uint256 public constant MAX_MULTIPLIER = 10e18;
     uint256 public constant MIN_MULTIPLIER = 0;
@@ -339,6 +340,13 @@ contract RewardEngine is ReentrancyGuard, Pausable, GovernanceOwnable {
         dailyVerifierRewards[dayKey][verifier] += finalAmount;
 
         emit RewardCalculated(verifier, finalAmount, calculationId);
+        emit RewardCalculatedV1(
+            calculationId,
+            verifier,
+            finalAmount,
+            uint64(block.timestamp),
+            EVENT_SCHEMA_VERSION
+        );
 
         return (finalAmount, calculationId);
     }
@@ -964,7 +972,7 @@ contract RewardEngine is ReentrancyGuard, Pausable, GovernanceOwnable {
      * @param recipient Address to receive the reward
      * @param amount Amount of reward to distribute
      */
-    function distributeReward(address recipient, uint256 amount) external onlyRole(REWARD_ENGINE_ROLE) whenNotPaused {
+    function distributeReward(address recipient, uint256 amount) external onlyRole(DISTRIBUTOR_ROLE) whenNotPaused {
         require(recipient != address(0), "Invalid recipient");
         require(amount > 0, "Cannot distribute 0");
         require(address(treasuryAccounting) != address(0), "Treasury not configured");
@@ -977,9 +985,29 @@ contract RewardEngine is ReentrancyGuard, Pausable, GovernanceOwnable {
 
     function pause() external onlyRole(PAUSER_ROLE) {
         _pause();
+        emit EmergencyPauseActivatedV1(
+
+            msg.sender,
+
+            keccak256("MANUAL_PAUSE"),
+
+            uint64(block.timestamp),
+
+            EVENT_SCHEMA_VERSION
+
+        );
     }
 
     function unpause() external onlyRole(PAUSER_ROLE) {
         _unpause();
+        emit EmergencyPauseRecoveredV1(
+
+            msg.sender,
+
+            uint64(block.timestamp),
+
+            EVENT_SCHEMA_VERSION
+
+        );
     }
 }
