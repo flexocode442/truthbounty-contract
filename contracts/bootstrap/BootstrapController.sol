@@ -5,6 +5,7 @@ import "@openzeppelin/contracts/access/AccessControl.sol";
 import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 import "@openzeppelin/contracts/utils/Pausable.sol";
 import "../governance/GovernanceOwnable.sol";
+import "../interfaces/ITruthBountyEvents.sol";
 import "../governance/GovernanceHooks.sol";
 import "../governance/GovernanceController.sol";
 import "../IReputationOracle.sol";
@@ -20,8 +21,6 @@ interface ITruthBountyWeighted {
     function settlementThresholdPercent() external view returns (uint256);
     function rewardPercent() external view returns (uint256);
     function slashPercent() external view returns (uint256);
-
-    function GOVERNANCE_ROLE() external view returns (bytes32);
 }
 
 interface IStaking {
@@ -41,13 +40,13 @@ interface ITruthBountyClaims {
     function bountyToken() external view returns (address);
 }
 
-contract BootstrapController is ReentrancyGuard, Pausable, GovernanceOwnable {
+contract BootstrapController is ReentrancyGuard, Pausable, GovernanceOwnable, ITruthBountyEvents {
+    uint16 public constant EVENT_SCHEMA_VERSION = 1;
     // ============ Roles ============
 
     bytes32 public constant ADMIN_ROLE = keccak256("ADMIN_ROLE");
     bytes32 public constant PAUSER_ROLE = keccak256("PAUSER_ROLE");
     bytes32 public constant DEPLOYER_ROLE = keccak256("DEPLOYER_ROLE");
-    bytes32 public constant PAUSER_ROLE = keccak256("PAUSER_ROLE");
 
     // ============ Constants ============
 
@@ -471,9 +470,29 @@ contract BootstrapController is ReentrancyGuard, Pausable, GovernanceOwnable {
 
     function pause() external onlyRole(PAUSER_ROLE) {
         _pause();
+        emit EmergencyPauseActivatedV1(
+
+            msg.sender,
+
+            keccak256("MANUAL_PAUSE"),
+
+            uint64(block.timestamp),
+
+            EVENT_SCHEMA_VERSION
+
+        );
     }
 
     function unpause() external onlyRole(PAUSER_ROLE) {
         _unpause();
+        emit EmergencyPauseRecoveredV1(
+
+            msg.sender,
+
+            uint64(block.timestamp),
+
+            EVENT_SCHEMA_VERSION
+
+        );
     }
 }
