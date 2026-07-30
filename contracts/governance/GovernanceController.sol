@@ -5,6 +5,7 @@ import "@openzeppelin/contracts/access/AccessControl.sol";
 import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 import "./GovernanceHooks.sol";
 import "./GovernorAccess.sol";
+import "../interfaces/ITruthBountyEvents.sol";
 
 /**
  * @title GovernanceController
@@ -17,11 +18,12 @@ import "./GovernorAccess.sol";
  * 3. Once approved, proposal can be executed here
  * 4. Execution updates the target contract parameters
  */
-contract GovernanceController is GovernorAccessControl, ReentrancyGuard, GovernanceHooks {
+contract GovernanceController is GovernorAccessControl, ReentrancyGuard, GovernanceHooks, ITruthBountyEvents {
     // ============ Constants ============
     
     uint256 public constant MIN_PROPOSAL_DELAY = 1 hours;
     uint256 public constant MAX_PROPOSAL_DELAY = 30 days;
+    uint16 public constant EVENT_SCHEMA_VERSION = 1;
     
     // ============ State Variables ============
     
@@ -201,6 +203,12 @@ contract GovernanceController is GovernorAccessControl, ReentrancyGuard, Governa
             oldValue,
             proposal.newValue
         );
+        emit GovernanceProposalExecutedV1(
+            proposalId,
+            msg.sender,
+            uint64(block.timestamp),
+            EVENT_SCHEMA_VERSION
+        );
     }
 
     /**
@@ -319,6 +327,12 @@ contract GovernanceController is GovernorAccessControl, ReentrancyGuard, Governa
             proposalId,
             proposal.newAddress
         );
+        emit GovernanceProposalExecutedV1(
+            proposalId,
+            msg.sender,
+            uint64(block.timestamp),
+            EVENT_SCHEMA_VERSION
+        );
     }
 
     // ============ View Functions ============
@@ -420,6 +434,14 @@ contract GovernanceController is GovernorAccessControl, ReentrancyGuard, Governa
             pendingProposalIds.push(proposalId);
             isProposalPendingSet[proposalId] = true;
         }
+        
+        emit GovernanceProposalCreatedV1(
+            proposalId,
+            msg.sender,
+            keccak256(abi.encode(paramType, oldValue, newValue, newAddress)),
+            uint64(block.timestamp),
+            EVENT_SCHEMA_VERSION
+        );
     }
 
     // ============ Admin Functions ============
